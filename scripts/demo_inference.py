@@ -4,6 +4,7 @@ import os
 import platform
 import sys
 import time
+import traceback
 
 import numpy as np
 import cv2
@@ -295,6 +296,7 @@ if __name__ == "__main__":
         det_loader.stop()
     except Exception as e:
         print(repr(e))
+        traceback.print_exc()  # This will print the traceback details to the console
         print('An error as above occurs when processing the images, please check it')
         pass
     except KeyboardInterrupt:

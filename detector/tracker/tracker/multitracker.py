@@ -19,7 +19,7 @@ class STrack(BaseTrack):
     def __init__(self, tlwh, score, temp_feat, buffer_size=30):
 
         # wait activate
-        self._tlwh = np.asarray(tlwh, dtype=np.float)
+        self._tlwh = np.asarray(tlwh, dtype=float)
         self.kalman_filter = None
         self.mean, self.covariance = None, None
         self.is_activated = False
@@ -31,7 +31,7 @@ class STrack(BaseTrack):
         self.update_features(temp_feat)
         self.features = deque([], maxlen=buffer_size)
         self.alpha = 0.9
-    
+
     def update_features(self, feat):
         self.curr_feat = feat
         if self.smooth_feat is None:
@@ -39,7 +39,7 @@ class STrack(BaseTrack):
         else:
             self.smooth_feat = self.alpha *self.smooth_feat + (1-self.alpha) * feat
         self.features.append(feat)
-        self.smooth_feat /= np.linalg.norm(self.smooth_feat)  
+        self.smooth_feat /= np.linalg.norm(self.smooth_feat)
 
     def predict(self):
         mean_state = self.mean.copy()
@@ -229,7 +229,7 @@ class JDETracker(object):
         r_tracked_stracks = [strack_pool[i] for i in u_track if strack_pool[i].state==TrackState.Tracked ]
         dists = matching.iou_distance(r_tracked_stracks, detections)
         matches, u_track, u_detection = matching.linear_assignment(dists, thresh=0.5)
-        
+
         for itracked, idet in matches:
             track = r_tracked_stracks[itracked]
             det = detections[idet]
@@ -333,5 +333,5 @@ def remove_duplicate_stracks(stracksa, stracksb):
     resa = [t for i,t in enumerate(stracksa) if not i in dupa]
     resb = [t for i,t in enumerate(stracksb) if not i in dupb]
     return resa, resb
-            
+
 
