@@ -6,6 +6,7 @@ import sys
 import time
 
 import numpy as np
+import cv2
 import torch
 from tqdm import tqdm
 import natsort
@@ -128,6 +129,9 @@ def check_input():
         inputpath = args.inputpath
         inputlist = args.inputlist
         inputimg = args.inputimg
+        print('inputpath',inputpath)
+        print('inputlist',inputlist)
+        print('inputimg', inputimg)
 
         if len(inputlist):
             im_names = open(inputlist, 'r').readlines()
@@ -138,7 +142,7 @@ def check_input():
         elif len(inputimg):
             args.inputpath = os.path.split(inputimg)[0]
             im_names = [os.path.split(inputimg)[1]]
-
+        print('im_names', im_names)
         return 'image', im_names
 
     else:
@@ -158,7 +162,12 @@ def loop():
         yield n
         n += 1
 
-
+def draw_bboxes(image, boxes):
+    for box in boxes:
+        # Draw bounding boxes on the image
+        cv2.rectangle(image, (int(box[0]), int(box[1])), (int(box[2]), int(box[3])), (255, 0, 0), 2)
+    return image
+    
 if __name__ == "__main__":
     mode, input_source = check_input()
 
@@ -180,7 +189,8 @@ if __name__ == "__main__":
     pose_model = builder.build_sppe(cfg.MODEL, preset_cfg=cfg.DATA_PRESET)
 
     print('Loading pose model from %s...' % (args.checkpoint,))
-    pose_model.load_state_dict(torch.load(args.checkpoint, map_location=args.device))
+    pose_model.load_state_dict(torch.load(args.checkpoint, map_location=args.device), strict=False)
+    print("Pose Model Loaded: ", pose_model)
     pose_dataset = builder.retrieve_dataset(cfg.DATASET.TRAIN)
     if args.pose_track:
         tracker = Tracker(tcfg, args)
@@ -225,11 +235,18 @@ if __name__ == "__main__":
             start_time = getTime()
             with torch.no_grad():
                 (inps, orig_img, im_name, boxes, scores, ids, cropped_boxes) = det_loader.read()
+                print("Boxes detected: ", boxes)  # Add this to see if boxes are detected
                 if orig_img is None:
                     break
                 if boxes is None or boxes.nelement() == 0:
                     writer.save(None, None, None, None, None, orig_img, im_name)
                     continue
+                
+                # Add this block to visualize bounding boxes if --showbox is enabled
+                if args.showbox and boxes is not None:
+                    print("Drawing bounding boxes...")
+                    orig_img = draw_bboxes(orig_img, boxes)  
+                    
                 if args.profile:
                     ckpt_time, det_time = getTime(start_time)
                     runtime_profile['dt'].append(det_time)
@@ -246,10 +263,12 @@ if __name__ == "__main__":
                     if args.flip:
                         inps_j = torch.cat((inps_j, flip(inps_j)))
                     hm_j = pose_model(inps_j)
+
                     if args.flip:
                         hm_j_flip = flip_heatmap(hm_j[int(len(hm_j) / 2):], pose_dataset.joint_pairs, shift=True)
                         hm_j = (hm_j[0:int(len(hm_j) / 2)] + hm_j_flip) / 2
                     hm.append(hm_j)
+                # print("Pose Heatmaps: ", np.array(hm).shape)  # Add this to see if the model is generating heatmaps
                 hm = torch.cat(hm)
                 if args.profile:
                     ckpt_time, pose_time = getTime(ckpt_time)
