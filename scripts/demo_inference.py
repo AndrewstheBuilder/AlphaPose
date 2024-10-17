@@ -168,7 +168,7 @@ def draw_bboxes(image, boxes):
         # Draw bounding boxes on the image
         cv2.rectangle(image, (int(box[0]), int(box[1])), (int(box[2]), int(box[3])), (255, 0, 0), 2)
     return image
-    
+
 if __name__ == "__main__":
     mode, input_source = check_input()
 
@@ -242,12 +242,12 @@ if __name__ == "__main__":
                 if boxes is None or boxes.nelement() == 0:
                     writer.save(None, None, None, None, None, orig_img, im_name)
                     continue
-                
+
                 # Add this block to visualize bounding boxes if --showbox is enabled
-                if args.showbox and boxes is not None:
-                    print("Drawing bounding boxes...")
-                    orig_img = draw_bboxes(orig_img, boxes)  
-                    
+                # if args.showbox and boxes is not None:
+                #     print("Drawing bounding boxes...")
+                #     orig_img = draw_bboxes(orig_img, boxes)
+
                 if args.profile:
                     ckpt_time, det_time = getTime(start_time)
                     runtime_profile['dt'].append(det_time)
