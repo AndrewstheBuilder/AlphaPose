@@ -153,7 +153,7 @@ class DataWriter():
                             'kp_score':preds_scores[k],
                             'proposal_score': torch.mean(preds_scores[k]) + scores[k] + 1.25 * max(preds_scores[k]),
                             'idx':ids[k],
-                            'box':[boxes[k][0], boxes[k][1], boxes[k][2]-boxes[k][0],boxes[k][3]-boxes[k][1]] 
+                            'box':[boxes[k][0], boxes[k][1], boxes[k][2]-boxes[k][0],boxes[k][3]-boxes[k][1]]
                         }
                     )
 
@@ -171,10 +171,13 @@ class DataWriter():
                 final_result.append(result)
                 if self.opt.save_img or self.save_video or self.opt.vis:
                     if hm_data.size()[1] == 49:
+                        print('vis_frame_dense')
                         from alphapose.utils.vis import vis_frame_dense as vis_frame
                     elif self.opt.vis_fast:
+                        print('vis_frame_fast')
                         from alphapose.utils.vis import vis_frame_fast as vis_frame
                     else:
+                        print('vis_frame')
                         from alphapose.utils.vis import vis_frame
                     img = vis_frame(orig_img, result, self.opt, self.vis_thres)
                     self.write_image(img, im_name, stream=stream if self.save_video else None)
@@ -217,7 +220,7 @@ class DataWriter():
 
     def clear_queues(self):
         self.clear(self.result_queue)
-        
+
     def clear(self, queue):
         while not queue.empty():
             queue.get()
